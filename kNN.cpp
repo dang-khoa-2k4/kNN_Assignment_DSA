@@ -578,9 +578,9 @@ Dataset Dataset::extract(int startRow, int endRow,
     return *pT;
 }
 
-MyLinkList<List<int> *> *Dataset::getData() const
+List<List<int> *> *Dataset::getData() const
 {
-    return (MyLinkList<List<int> *> *) data;
+    return data;
 }
 
 MyLinkList<int> *Dataset::getLabel() const
@@ -605,21 +605,21 @@ Dataset kNN::predict(const Dataset& X_test)
     Dataset * y_pred = new Dataset();
     // calc distance from each row of X_test to each row of X_train
     int maxDistance = sqrt(pow(255, 2) * 28 * 28);
-    X_test.getData()->resetCur();
+    ((MyLinkList<List<int>*>*) X_test.getData())->resetCur();
     // For each row of X_test, calc distance to each row of X_train
-    while (X_test.getData()->getCur())
+    while (((MyLinkList<List<int>*>*)X_test.getData())->getCur())
     {
         // store distance from each row of X_train to 1 image of X_test
-        List<int> * image = X_test.getData()->getCur()->data;
+        List<int> * image = ((MyLinkList<List<int>*>*) X_test.getData())->getCur()->data;
         int * label = new int[maxDistance];
         int * distanceToTrain = new int[X_train->getData()->length()];
-        X_train->getData()->resetCur();
+        ((MyLinkList<List<int>*>*) X_train->getData())->resetCur();
         // For each image of X_train, calc distance to 1 image of X_test
         y_train->getLabel()->resetCur();
         int idx = 0;
-        while (X_train->getData()->getCur())
+        while (((MyLinkList<List<int>*>*)X_train->getData())->getCur())
         {
-            List<int> * trainImage = X_train->getData()->getCur()->data;
+            List<int> * trainImage = ((MyLinkList<List<int>*>*) X_train->getData())->getCur()->data;
             int distance = 0;
             ((MyLinkList<int> *)image)->resetCur();
             ((MyLinkList<int> *)trainImage)->resetCur();
@@ -634,7 +634,7 @@ Dataset kNN::predict(const Dataset& X_test)
             distanceToTrain[idx++] = sqrt(distance);
             label[distanceToTrain[idx - 1]] = y_train->getLabel()->getCur()->data;
             // go to next image of X_train
-            X_train->getData()->updateCur();
+            ((MyLinkList<List<int>*>*) X_train->getData())->updateCur();
             y_train->getLabel()->updateCur();
         }
         // for (int i = 0; i < X_train->getData()->length(); i++)
@@ -649,16 +649,7 @@ Dataset kNN::predict(const Dataset& X_test)
         // cout << endl;  
 
         // Sort distanceToTrain and map with label of X_train
-        for (int i = 0; i < X_train->getData()->length(); i++)
-        {
-            for (int j = i + 1; j < X_train->getData()->length(); j++)
-            {
-                if (distanceToTrain[i] > distanceToTrain[j])
-                {
-                    swap(distanceToTrain[i], distanceToTrain[j]);
-                }
-            }
-        }
+        mergeSort(distanceToTrain, 0, X_train->getData()->length() - 1);
         // for (int i = 0; i < X_train->getData()->length(); i++)
         // {
         //    cout << distanceToTrain[i] << " ";
@@ -685,7 +676,8 @@ Dataset kNN::predict(const Dataset& X_test)
         delete [] label;
         delete [] distanceToTrain;
         // go to next image of X_test
-        X_test.getData()->updateCur();
+        ((MyLinkList<List<int>*>*) X_test.getData())->updateCur();
+        cout << "Done\n";
     }
     return *y_pred;
 }
@@ -712,10 +704,52 @@ void train_test_split(Dataset& X, Dataset& y, double test_size,
 {
     int nRows, nCols;
     X.getShape(nRows, nCols);
-    int nData = nRows * test_size;
+    int nData = nRows - (nRows * test_size);
     
-    X_train = X.extract(0, nData, 0, -1);
-    y_train = y.extract(0, nData, 0, 0);
-    X_test = X.extract(nData + 1, -1, 0, -1);
-    y_test = y.extract(nData + 1, -1, 0, 0);
+    X_train = X.extract(0, nData - 1, 0, -1);
+    y_train = y.extract(0, nData - 1, 0, 0);
+    X_test = X.extract(nData, -1, 0, -1);
+    y_test = y.extract(nData, -1, 0, 0);
+}
+
+void merge(int *arr, int l, int m, int r)
+{
+    int * tempL = new int[m - l + 1];
+    for (int i = l; i < m + 1; i++)
+    {
+        tempL[i - l] = arr[i];
+    }
+    int i = 0, j = m + 1, k = l;
+    while (i < m - l + 1 && j < r + 1)
+    {
+        if (tempL[i] < arr[j])
+        {
+            arr[k] = tempL[i];
+            i++;
+        }
+        else 
+        {
+            arr[k] = arr[j];
+            j++;
+        }
+        k++;
+    }
+    while (i < m - l + 1)
+    {
+        arr[k] = tempL[i];
+        i++;
+        k++;
+    }
+    delete[] tempL;
+}
+
+void mergeSort(int *arr, int l, int r)
+{
+    if (l < r)
+    {
+        int m = (l + r) / 2;
+        mergeSort(arr, l, m);
+        mergeSort(arr, m + 1, r);
+        merge(arr, l, m, r);
+    }
 }
