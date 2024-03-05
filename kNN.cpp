@@ -677,7 +677,6 @@ Dataset kNN::predict(const Dataset& X_test)
         delete [] distanceToTrain;
         // go to next image of X_test
         ((MyLinkList<List<int>*>*) X_test.getData())->updateCur();
-        cout << "Done\n";
     }
     return *y_pred;
 }
