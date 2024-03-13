@@ -98,6 +98,20 @@ template <class T>
 void MyLinkList<T>::remove(int idx)
 {
     if (idx < 0 || idx >= nE) return;
+    // ensure assign tail to new tail if tail is removed
+    if (idx == nE - 1 && nE > 1) 
+    {
+        Node * pT = head;
+        while (pT->next != tail)
+        {
+            pT = pT->next;
+        }
+        delete tail;
+        pT->next = nullptr;
+        tail = pT;
+        nE--;
+        return;
+    }
     Node ** pT = &(this->head);
     while (idx)
     {
@@ -425,7 +439,7 @@ void Dataset::printHead(int nRows, int nCols) const
 {
     int i = 0;
     columnNames->resetCur();
-    while (i < nCols)
+    while (i < nCols && i < columnNames->length())
     {
         cout << columnNames->getCur()->data;
         if (i < nCols - 1) cout << " ";
@@ -447,7 +461,7 @@ void Dataset::printHead(int nRows, int nCols) const
             ((MyLinkList<int> *) pL)->updateCur();
             j++;
         }
-        cout << endl;
+        if (i < nRows - 1) cout << endl;
         ((MyLinkList<List<int> *> *) data)->updateCur();
         i++;
     }
@@ -485,11 +499,10 @@ void Dataset::printTail(int nRows, int nCols) const
             ((MyLinkList<int> *) pL)->updateCur();
             j++;
         }
-        if (i >= ((MyLinkList<List<int> *> *) data)->length() - nRows) cout << endl;
+        if (i >= ((MyLinkList<List<int> *> *) data)->length() - nRows && i < ((MyLinkList<List<int> *> *) data)->length() - 1) cout << endl;
         ((MyLinkList<List<int> *> *) data)->updateCur();
         i++;
     }
-    cout << endl;
 }
 void Dataset::getShape(int& nRows, int& nCols) const
 {
@@ -603,6 +616,7 @@ void kNN::fit(const Dataset& X_train, const Dataset& y_train)
 Dataset kNN::predict(const Dataset& X_test)
 {
     Dataset * y_pred = new Dataset();
+    y_pred->getColumnNames()->push_back("label");
     // calc distance from each row of X_test to each row of X_train
     int maxDistance = sqrt(pow(255, 2) * 28 * 28);
     ((MyLinkList<List<int>*>*) X_test.getData())->resetCur();
@@ -672,7 +686,10 @@ Dataset kNN::predict(const Dataset& X_test)
         {
             if (maxLabel[i] > maxLabel[maxIdx]) maxIdx = i;
         }
-        y_pred->getLabel()->push_back(maxIdx);
+        // y_pred->getLabel()->push_back(maxIdx);
+        MyLinkList<int> * newRow = new MyLinkList<int>();
+        newRow->push_back(maxIdx);
+        y_pred->getData()->push_back(newRow);
         delete [] label;
         delete [] distanceToTrain;
         // go to next image of X_test
@@ -682,17 +699,19 @@ Dataset kNN::predict(const Dataset& X_test)
 }
 double kNN::score(const Dataset& y_test, const Dataset& y_pred)
 {
-    y_pred.getLabel()->resetCur();
-    y_test.getLabel()->resetCur();
+    ((MyLinkList<List<int>*>*) y_pred.getData())->resetCur();
+    ((MyLinkList<List<int>*>*) y_test.getData())->resetCur();
     int count = 0;
-    while (y_pred.getLabel()->getCur())
+    while (((MyLinkList<List<int>*>*) y_pred.getData())->getCur())
     {
-        if (y_pred.getLabel()->getCur()->data == y_test.getLabel()->getCur()->data) count++;
-        y_pred.getLabel()->updateCur();
-        y_test.getLabel()->updateCur();
+        int a = ((MyLinkList<List<int>*>*) y_pred.getData())->getCur()->data->get(0);
+        int b = ((MyLinkList<List<int>*>*) y_test.getData())->getCur()->data->get(0);
+        if (a == b) count++;
+        ((MyLinkList<List<int>*>*) y_pred.getData())->updateCur();
+        ((MyLinkList<List<int>*>*) y_test.getData())->updateCur();
     }
     // cout << "Accuracy: " << count << " / " << y_pred.getLabel()->length() << endl;
-    return (double)count / y_pred.getLabel()->length();
+    return (double)count / y_pred.getData()->length();
 }
 
 // TODO : Extra function

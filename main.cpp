@@ -2,9 +2,11 @@
 
 void tc1(){
     Dataset dataset;
-    dataset.loadFromCSV("../datasets/mnist_test.csv");
+    dataset.loadFromCSV("mnist.csv");
     dataset.printHead();
+    cout << endl;
     dataset.printTail();
+    cout << endl;
     int nRows, nCols;
     dataset.getShape(nRows, nCols);
     cout << "Shape: " << nRows << "x" << nCols << endl;
@@ -31,7 +33,32 @@ void tc1(){
     cout << "Accuracy: " << accuracy << endl;
 }
 
+void tc2()
+{
+    Dataset dataset;
+    dataset.loadFromCSV("mnist.csv");
+    int nRows, nCols;
+
+    kNN knn;
+    Dataset X_train, X_test, y_train, y_test;
+    Dataset feature = dataset.extract(0, -1, 1, -1);
+    Dataset label = dataset.extract(0, -1, 0, 0);
+
+    train_test_split(feature, label, 0.2, X_train, X_test, y_train, y_test);
+    knn.fit(X_train, y_train);
+    Dataset y_pred = knn.predict(X_test);
+
+    cout << "y_pred" << endl;
+    y_pred.printHead(10, 10);
+    cout << endl;
+    cout << "y_test" << endl;
+    y_test.printHead(10, 10);
+    cout << endl;
+    y_test.printTail(10, 10);
+    cout << endl;
+}
+
 int main() {
-    tc1();
+    tc2();
     return 0;
 }
