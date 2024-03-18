@@ -16,7 +16,9 @@ MyLinkList<T>::MyLinkList()
 template <class T>
 MyLinkList<T>::MyLinkList(List<T> *other)
 {
-    Node *nT = &other->head;
+    this->head = nullptr;
+    this->tail = nullptr;
+    Node *nT = other->head;
     while (nT)
     {
         push_back(nT->data);
@@ -83,7 +85,12 @@ void MyLinkList<T>::push_front(T val)
 template <class T>
 void MyLinkList<T>::insert(int idx, T val)
 {
-    if (idx < 0 || idx >= nE) return;
+    if (idx < 0 || idx > nE) return;
+    if (idx == nE)
+    {
+        push_back(val);
+        return;
+    }
     Node ** nT = &head;
     while (idx && *nT)
     {
@@ -91,8 +98,8 @@ void MyLinkList<T>::insert(int idx, T val)
         nT = &((*nT)->next);
     }
     *nT = new Node(val, *nT);
-    if (nE == 1) curNode = head;
     ++nE;
+    if (nE == 1) curNode = head;
 }
 template <class T>
 void MyLinkList<T>::remove(int idx)
@@ -136,11 +143,6 @@ T& MyLinkList<T>::get(int idx) const
     return pT->data;
 }
 
-template<class T>
-T &MyLinkList<T>::getNext(MyLinkList<T>::Node *curNode) const
-{
-    return curNode->data;
-}
 
 template <class T>
 int MyLinkList<T>::length() const 
@@ -321,11 +323,9 @@ Dataset::Dataset()
 {   
     data = new MyLinkList<List<int>*>();
     columnNames = new MyLinkList<std::string>();
-    label = new MyLinkList<int>();
 }
 Dataset::~Dataset()
 {
-    delete label;
     delete columnNames;
 
     ((MyLinkList<List<int>*>*) data)
@@ -335,21 +335,6 @@ Dataset::~Dataset()
         l->clear();
         delete l;
     });
-    // if (((MyLinkList<List<int> *> *) data)->getHead()) 
-    // {
-    //     List<int> * pT = ((MyLinkList<List<int> *> *) data)->getHead()->data;
-    //     while (pT)
-    //     {
-    //         List<int> *delList = pT;
-    //         if (((MyLinkList<List<int> *> *) data)->getCur()->next)
-    //         {
-    //             pT = ((MyLinkList<List<int> *> *) data)->getCur()->next->data;
-    //             ((MyLinkList<List<int> *> *) data)->updateCur(); 
-    //         }    
-    //         else pT = nullptr;
-    //         delete delList;
-    //     }
-    // }
     delete data;
 }
 
@@ -383,8 +368,6 @@ Dataset::Dataset(const Dataset& other)
     // }
     this->columnNames = new MyLinkList<std::string>();
     other.columnNames->traverse(this->columnNames,[](std::string &s, MyLinkList<string> * p){p->push_back(s);});
-    this->label = new MyLinkList<int>();
-    other.label->traverse(this->label,[](int &i, MyLinkList<int> * p){p->push_back(i);});
 }
 Dataset &Dataset::operator=(const Dataset& other)
 {
@@ -399,8 +382,6 @@ Dataset &Dataset::operator=(const Dataset& other)
     });
     this->columnNames = new MyLinkList<std::string>();
     other.columnNames->traverse(this->columnNames,[](std::string &s, MyLinkList<string> * p){p->push_back(s);});
-    this->label = new MyLinkList<int>();
-    other.label->traverse(this->label, [](int &i, MyLinkList<int> * p){p->push_back(i);});
     return *this;
 }
 
@@ -420,7 +401,6 @@ bool Dataset::loadFromCSV(const char* fileName)
     {
         stringstream ss(line);
         List<int> * newRow = new MyLinkList<int>();
-        label->push_back(stoi(line.substr(0, line.find(','))));
         while (getline(ss, token, ','))
         {
             newRow->push_back(stoi(token));
@@ -555,7 +535,6 @@ Dataset Dataset::extract(int startRow, int endRow,
     Dataset * pT = new Dataset();
     ((MyLinkList<List<int> *>*)data)->resetCur();
     columnNames->resetCur();
-    label->resetCur();
     int i = 0;
     while (((MyLinkList<List<int> *>*)data)->getCur())
     {
@@ -563,7 +542,6 @@ Dataset Dataset::extract(int startRow, int endRow,
         {
             List<int> * pL = ((MyLinkList<List<int> *>*)data)->getCur()->data;
             ((MyLinkList<int>*)pL)->resetCur();
-            pT->label->push_back(label->getCur()->data);
             int j = 0;
             MyLinkList<int> * newRow = new MyLinkList<int>();
             while (((MyLinkList<int>*)pL)->getCur())
@@ -585,7 +563,6 @@ Dataset Dataset::extract(int startRow, int endRow,
         }
         if (i == endRow) break;
         ((MyLinkList<List<int> *>*)data)->updateCur();
-        label->updateCur();
         i++;
     }  
     return *pT;
@@ -594,11 +571,6 @@ Dataset Dataset::extract(int startRow, int endRow,
 List<List<int> *> *Dataset::getData() const
 {
     return data;
-}
-
-MyLinkList<int> *Dataset::getLabel() const
-{
-    return label;
 }
 
 // TODO : Implementation of kNN
@@ -629,7 +601,7 @@ Dataset kNN::predict(const Dataset& X_test)
         int * distanceToTrain = new int[X_train->getData()->length()];
         ((MyLinkList<List<int>*>*) X_train->getData())->resetCur();
         // For each image of X_train, calc distance to 1 image of X_test
-        y_train->getLabel()->resetCur();
+        ((MyLinkList<List<int>*>*) y_train->getData())->resetCur();
         int idx = 0;
         while (((MyLinkList<List<int>*>*)X_train->getData())->getCur())
         {
@@ -646,10 +618,10 @@ Dataset kNN::predict(const Dataset& X_test)
                 ((MyLinkList<int> *)trainImage)->updateCur();
             }
             distanceToTrain[idx++] = sqrt(distance);
-            label[distanceToTrain[idx - 1]] = y_train->getLabel()->getCur()->data;
+            label[distanceToTrain[idx - 1]] = ((MyLinkList<List<int>*>*) y_train->getData())->getCur()->data->get(0);
             // go to next image of X_train
             ((MyLinkList<List<int>*>*) X_train->getData())->updateCur();
-            y_train->getLabel()->updateCur();
+            ((MyLinkList<List<int>*>*) y_train->getData())->updateCur();
         }
         // for (int i = 0; i < X_train->getData()->length(); i++)
         // {

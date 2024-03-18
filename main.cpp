@@ -58,7 +58,38 @@ void tc2()
     cout << endl;
 }
 
+void tc1009()
+{
+    Dataset dataset;
+    dataset.loadFromCSV("mnist.csv");
+    List<int> *row = dataset.getData()->get(0);
+
+    for (int i = 0; i < 10000; i++)
+    {
+        row->push_back(1);
+    }
+
+    cout << row->length() << endl;
+    row->print();
+}
+void tc1029()
+{
+    Dataset dataset;
+    dataset.loadFromCSV("mnist.csv");
+    List<int> *row = dataset.getData()->get(0);
+
+    row->insert(0, 1);
+    row->insert(1, 3);
+    row->insert(2, 2);
+    row->insert(3, 5);
+
+    cout << row->length() << endl;
+    row->print();
+}
+
 int main() {
-    tc2();
+    // tc1009();
+    // tc1029();
+    tc1();
     return 0;
 }
