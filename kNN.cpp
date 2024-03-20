@@ -211,112 +211,6 @@ void MyLinkList<T>::traverse(int val, void (*f)(T &, int))
     }
 }
 
-//TODO : Implementation of Array List
-// template <class T>
-// ArrayList<T>::ArrayList()
-// {
-//     pA = new T[DEFAULT_CAPACITY];
-//     capacity = DEFAULT_CAPACITY;
-//     nE = 0;
-// }
-
-// template <class T>
-// ArrayList<T>::ArrayList(const List<T> *other)
-// {
-//     Node *nT = &other->head;
-//     while (nT)
-//     {
-//         push_back(nT->data);
-//         nT = nT->next;
-//     }
-// }
-
-// template <class T>
-// ArrayList<T>::ArrayList(const int capacity)
-// {
-//     pA = new T[capacity];
-//     this->capacity = capacity;
-//     nE = 0;
-// }
-
-// template <class T>
-// void ArrayList<T>::push_back(T val)
-// {
-//     Node * newNode = new Node(val);
-//     if (!head) head = tail = newNode;
-//     else 
-//     {
-//         tail->next = newNode;
-//         tail = newNode;
-//     }
-// }
-
-// template <class T>
-// void ArrayList<T>::push_front(T val)
-// {
-//     Node * newNode = new Node(val);
-//     if (!head) head = tail = newNode;
-//     else 
-//     {
-//         newNode->next = head;
-//         head = newNode;
-//     }
-// }
-// template <class T>
-// void ArrayList<T>::insert(int idx, T val)
-// {
-//     if (nE == capacity) reSize(capacity + 1);
-//     if (idx >= nE)
-//     {
-//         idx = nE;
-//     }
-//     if (idx < 0) idx = 0;
-//     for (int i = nE; i > idx; i--)
-//     {
-//         pA[i] = std::move(pA[i - 1]);
-//     }
-//     pA[idx] = std::move(val);
-//     nE++;
-// }
-
-// template <class T>
-// void ArrayList<T>::remove(int idx)
-// {
-//     if (idx < 0 || idx >= nE) return;
-//     nE--;
-//     for (int i = idx; i < nE; i++)
-//     {
-//         pA[i] = std::move(pA[i + 1]);
-//     }
-// }
-// template <class T>
-// T& ArrayList<T>::get(int idx) const
-// {
-//     if (idx < 0 || idx >= nE)  throw std::out_of_range("get(): Out of range");
-//     return std::move(pA[idx]);
-// }
-// template <class T>
-// int ArrayList<T>::length() const 
-// {
-//     return nE;
-// }
-// template <class T>
-// void ArrayList<T>::clear()
-// {
-//     delete [] pA;
-//     pA = nullptr;
-//     capacity = 0; 
-//     nE = 0;
-// }
-// template <class T>
-// void ArrayList<T>::print() const
-// {
-// }
-// template <class T>
-// void ArrayList<T>::reverse()
-// {
-
-// }
 
 // TODO : Implementation of Dataset
 Dataset::Dataset()
@@ -422,7 +316,7 @@ void Dataset::printHead(int nRows, int nCols) const
     while (i < nCols && i < columnNames->length())
     {
         cout << columnNames->getCur()->data;
-        if (i < nCols - 1) cout << " ";
+        if (i < nCols - 1 && i < columnNames->length() - 1) cout << " ";
         columnNames->updateCur();
         i++;
     }
@@ -437,11 +331,11 @@ void Dataset::printHead(int nRows, int nCols) const
         while (j < nCols && ((MyLinkList<int> *) pL)->getCur())
         {
             cout << ((MyLinkList<int> *) pL)->getCur()->data;
-            if (j < nCols - 1) cout << " ";
+            if (j < nCols - 1 && j < data->get(0)->length() - 1) cout << " ";
             ((MyLinkList<int> *) pL)->updateCur();
             j++;
         }
-        if (i < nRows - 1) cout << endl;
+        if (i < nRows - 1 && i < data->length() - 1) cout << endl;
         ((MyLinkList<List<int> *> *) data)->updateCur();
         i++;
     }
@@ -474,7 +368,8 @@ void Dataset::printTail(int nRows, int nCols) const
                         && j >= ((MyLinkList<int> *) pL)->length() - nCols)
             {
                 cout << ((MyLinkList<int> *) pL)->getCur()->data;
-                if (j < ((MyLinkList<int> *) pL)->length() - 1) cout << " ";
+                if (j < ((MyLinkList<int> *) pL)->length() - 1 
+                 && j < data->get(0)->length() - 1)             cout << " ";
             }
             ((MyLinkList<int> *) pL)->updateCur();
             j++;

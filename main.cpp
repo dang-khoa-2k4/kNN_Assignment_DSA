@@ -57,39 +57,70 @@ void tc2()
     y_test.printTail(10, 10);
     cout << endl;
 }
-
-void tc1009()
-{
+// for testing
+void tc_knn_p(int k, int size_X) {
+    int nRows, nCols;
     Dataset dataset;
     dataset.loadFromCSV("mnist.csv");
-    List<int> *row = dataset.getData()->get(0);
 
-    for (int i = 0; i < 10000; i++)
-    {
-        row->push_back(1);
-    }
+    kNN knn = kNN(k);
+    Dataset X_train, X_test, y_train, y_test;
+    Dataset feature = dataset.extract(0, size_X, 1, -1);
+    Dataset label = dataset.extract(0, size_X, 0, 0);
 
-    cout << row->length() << endl;
-    row->print();
+    train_test_split(feature, label, 0.2, X_train, X_test, y_train, y_test);
+    knn.fit(X_train, y_train);
+    Dataset y_pred = knn.predict(X_test);
+
+    cout << "y_pred" << endl;
+    y_pred.printHead(10, 10);
+    cout << endl;
+    cout << "y_test" << endl;
+    y_test.printTail(10, 10);
+    cout << endl;
 }
-void tc1029()
-{
+
+void tc_knn_score(int k, int size_X){
+    int nRows, nCols;
     Dataset dataset;
     dataset.loadFromCSV("mnist.csv");
-    List<int> *row = dataset.getData()->get(0);
 
-    row->insert(0, 1);
-    row->insert(1, 3);
-    row->insert(2, 2);
-    row->insert(3, 5);
+    kNN knn = kNN(k);
+    Dataset X_train, X_test, y_train, y_test;
+    Dataset feature = dataset.extract(0, size_X, 1, -1);
+    Dataset label = dataset.extract(0, size_X, 0, 0);
 
-    cout << row->length() << endl;
-    row->print();
+    train_test_split(feature, label, 0.2, X_train, X_test, y_train, y_test);
+    knn.fit(X_train, y_train);
+    Dataset y_pred = knn.predict(X_test);
+    double accuracy = knn.score(y_test, y_pred);
+    cout << "Accuracy: " << accuracy << endl;
+}
+
+void tc1181()
+{
+    tc_knn_p(2, 10);
+}
+
+void tc1207()
+{
+    tc_knn_score(10, 100);
+}
+
+void tc1158()
+{
+    int nRows, nCols;
+    Dataset dataset;
+    dataset.loadFromCSV("mnist.csv");
+    Dataset dataset_extract = dataset.extract(0, -2, 0, -1);
+    Dataset dataset_extract2 = Dataset(dataset_extract);
+    dataset_extract2.getShape(nRows, nCols);
+    cout << "Dataset extract shape: " << nRows << "x" << nCols << endl;
 }
 
 int main() {
-    // tc1009();
-    // tc1029();
-    tc1();
+ 
+    // tc1207();
+    tc1158();
     return 0;
 }

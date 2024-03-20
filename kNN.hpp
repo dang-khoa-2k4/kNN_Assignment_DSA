@@ -60,28 +60,6 @@ public:
     void traverse(int val, void (*f)(T&, int));    
 };
 
-// template <class T> 
-// class ArrayList : public List<T>
-// {
-// protected:
-//     T *pA;
-//     int capacity;
-//     int nE;
-// public:
-//     ArrayList();
-//     ArrayList(const int capacity);
-//     ArrayList(const List<T> * other);
-//     ~ArrayList() { clear(); }
-//     void push_back(T value);
-//     void push_front(T value);
-//     void insert(int index, T value);
-//     void remove(int index);
-//     T& get(int index) const;
-//     int length() const ;
-//     void clear();
-//     void print() const;
-//     void reverse();    
-// };
 
 class Dataset {
 private:
