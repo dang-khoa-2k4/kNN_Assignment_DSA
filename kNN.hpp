@@ -89,6 +89,13 @@ private:
     //You may need to define more
     Dataset * X_train;
     Dataset * y_train;
+    struct imageInfo
+    {
+        float distanceToTrain;
+        int label;
+        bool operator<(const imageInfo& other) 
+        {return this->distanceToTrain < other.distanceToTrain;};
+    };
 public:
     kNN(int k = 5);
     void fit(const Dataset& X_train, const Dataset& y_train);
@@ -101,5 +108,5 @@ void train_test_split(Dataset& X, Dataset& y, double test_size,
 
 
 // Please add more or modify as needed
-void merge(int * arr, int l, int m, int r);
-void mergeSort(int * arr, int l, int r);
+template<class T> void merge(T * arr, int l, int m, int r);
+template<class T> void mergeSort(T * arr, int l, int r);

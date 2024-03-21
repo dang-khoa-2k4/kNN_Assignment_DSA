@@ -412,11 +412,13 @@ bool Dataset::drop(int axis, int idx, std::string columns )
             columnNames->updateCur();
             index++;
         }
-        ((MyLinkList<List<int> *> *) data)->traverse(index, 
-        [](List<int> * &l, int index)
-        {
-            ((MyLinkList<int>*)l)->remove(index);
-        });
+        if (index >= columnNames->length()) return false;
+        else
+            ((MyLinkList<List<int> *> *) data)->traverse(index, 
+            [](List<int> * &l, int index)
+            {
+                ((MyLinkList<int>*)l)->remove(index);
+            });
     }
     else return false;
     return true;
@@ -427,6 +429,12 @@ Dataset Dataset::extract(int startRow, int endRow,
 {
     if (endRow == -1) endRow = ((MyLinkList<List<int> *> *) data)->length() - 1;
     if (endCol == -1) endCol = ((MyLinkList<int> *) ((MyLinkList<List<int> *> *) data)->getHead()->data)->length() - 1;
+    if (startRow < 0 || startRow >= data->length() 
+     || endRow < -1 || endRow >= data->length() 
+     || startCol < 0 || startCol >= data->get(0)->length() 
+     || endCol < -1 || endCol >= data->get(0)->length()
+     || startRow > endRow || startCol > endCol) 
+     throw std::out_of_range("get(): Out of range");
     Dataset * pT = new Dataset();
     ((MyLinkList<List<int> *>*)data)->resetCur();
     columnNames->resetCur();
@@ -485,15 +493,16 @@ Dataset kNN::predict(const Dataset& X_test)
     Dataset * y_pred = new Dataset();
     y_pred->getColumnNames()->push_back("label");
     // calc distance from each row of X_test to each row of X_train
-    int maxDistance = sqrt(pow(255, 2) * 28 * 28);
+    // int maxDistance = sqrt(pow(255, 2) * 28 * 28);
     ((MyLinkList<List<int>*>*) X_test.getData())->resetCur();
     // For each row of X_test, calc distance to each row of X_train
     while (((MyLinkList<List<int>*>*)X_test.getData())->getCur())
     {
         // store distance from each row of X_train to 1 image of X_test
         List<int> * image = ((MyLinkList<List<int>*>*) X_test.getData())->getCur()->data;
-        int * label = new int[maxDistance];
-        int * distanceToTrain = new int[X_train->getData()->length()];
+        imageInfo * info = new imageInfo[X_train->getData()->length()];
+        // int * label = new int[maxDistance];
+        // int * distanceToTrain = new int[X_train->getData()->length()];
         ((MyLinkList<List<int>*>*) X_train->getData())->resetCur();
         // For each image of X_train, calc distance to 1 image of X_test
         ((MyLinkList<List<int>*>*) y_train->getData())->resetCur();
@@ -512,41 +521,21 @@ Dataset kNN::predict(const Dataset& X_test)
                 ((MyLinkList<int> *)image)->updateCur();
                 ((MyLinkList<int> *)trainImage)->updateCur();
             }
-            distanceToTrain[idx++] = sqrt(distance);
-            label[distanceToTrain[idx - 1]] = ((MyLinkList<List<int>*>*) y_train->getData())->getCur()->data->get(0);
+            info[idx].distanceToTrain = sqrt(distance);
+            info[idx++].label = ((MyLinkList<List<int>*>*) y_train->getData())->getCur()->data->get(0);
             // go to next image of X_train
             ((MyLinkList<List<int>*>*) X_train->getData())->updateCur();
             ((MyLinkList<List<int>*>*) y_train->getData())->updateCur();
         }
-        // for (int i = 0; i < X_train->getData()->length(); i++)
-        // {
-        //    cout << distanceToTrain[i] << " ";
-        // }
-        // cout << endl; 
-        // for (int i = 0; i < X_train->getData()->length(); i++)
-        // {
-        //     cout << label[distanceToTrain[i]] << " ";
-        // }
-        // cout << endl;  
-
+        if (k > idx) throw std::out_of_range("get(): Out of range");
         // Sort distanceToTrain and map with label of X_train
-        mergeSort(distanceToTrain, 0, X_train->getData()->length() - 1);
-        // for (int i = 0; i < X_train->getData()->length(); i++)
-        // {
-        //    cout << distanceToTrain[i] << " ";
-        // }
-        // cout << endl; 
-        // cout << "After\n";
-        // for (int i = 0; i < X_train->getData()->length(); i++)
-        // {
-        //     cout << label[distanceToTrain[i]] << " ";
-        // }
-        // cout << endl << endl;   
+        mergeSort(info, 0, X_train->getData()->length() - 1);  
+
         int maxLabel[10];
         for (int i = 0; i < 10; i++) maxLabel[i] = 0;
         for (int i = 0; i < k; i++)
         {
-            maxLabel[label[distanceToTrain[i]]]++;
+            maxLabel[info[i].label]++;
         }
         int maxIdx = 0;
         for (int i = 0; i < 10; i++)
@@ -557,8 +546,7 @@ Dataset kNN::predict(const Dataset& X_test)
         MyLinkList<int> * newRow = new MyLinkList<int>();
         newRow->push_back(maxIdx);
         y_pred->getData()->push_back(newRow);
-        delete [] label;
-        delete [] distanceToTrain;
+        delete [] info;
         // go to next image of X_test
         ((MyLinkList<List<int>*>*) X_test.getData())->updateCur();
     }
@@ -597,9 +585,10 @@ void train_test_split(Dataset& X, Dataset& y, double test_size,
     y_test = y.extract(nData, -1, 0, 0);
 }
 
-void merge(int *arr, int l, int m, int r)
+template<class T>
+void merge(T *arr, int l, int m, int r)
 {
-    int * tempL = new int[m - l + 1];
+    T * tempL = new T[m - l + 1];
     for (int i = l; i < m + 1; i++)
     {
         tempL[i - l] = arr[i];
@@ -628,7 +617,8 @@ void merge(int *arr, int l, int m, int r)
     delete[] tempL;
 }
 
-void mergeSort(int *arr, int l, int r)
+template<class T>
+void mergeSort(T *arr, int l, int r)
 {
     if (l < r)
     {
