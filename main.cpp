@@ -102,7 +102,7 @@ void tc1207()
 
 int main() {
  
-    tc1207();
+    tc1();
 
     return 0;
 }

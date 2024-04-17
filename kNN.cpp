@@ -243,23 +243,6 @@ Dataset::Dataset(const Dataset& other)
         ((MyLinkList<int>*)l)->traverse((MyLinkList<int> *) newRow, [](int &i, MyLinkList<int> * p) {p->push_back(i);});
         p->push_back(newRow);
     });
-    // Dataset * pT = new Dataset();
-    // int sizeRow = ((MyLinkList<List<int> *> *) other.data)->length();
-    // ((MyLinkList<List<int> *> *) other.data)->resetCur(); // make sure curNode of Row is at head
-    // while (sizeRow--)
-    // {
-    //     MyLinkList<int> * newRow = new MyLinkList<int>();
-    //     List<int> * pL = ((MyLinkList<List<int> *> *) other.data)->getCur()->data;
-    //     int sizeCol = pL->length();
-    //     ((MyLinkList<int> *)pL)->resetCur(); // make sure curNode of Col is at head
-    //     while (sizeCol--)
-    //     {
-    //         newRow->push_back(((MyLinkList<int> *)pL)->getCur()->data);
-    //         ((MyLinkList<int> *)pL)->updateCur(); // go to next col
-    //     }
-    //     pT->data->push_back(newRow);
-    //     ((MyLinkList<List<int> *> *) other.data)->updateCur(); // go to new row
-    // }
     this->columnNames = new MyLinkList<std::string>();
     other.columnNames->traverse(this->columnNames,[](std::string &s, MyLinkList<string> * p){p->push_back(s);});
 }
@@ -565,7 +548,7 @@ double kNN::score(const Dataset& y_test, const Dataset& y_pred)
         ((MyLinkList<List<int>*>*) y_pred.getData())->updateCur();
         ((MyLinkList<List<int>*>*) y_test.getData())->updateCur();
     }
-    // cout << "Accuracy: " << count << " / " << y_pred.getLabel()->length() << endl;
+    // cout << "Accuracy: " << count << " / " << y_pred.getData()->length() << endl;
     return (double)count / y_pred.getData()->length();
 }
 
